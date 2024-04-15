@@ -509,7 +509,7 @@ class NettToMonthlySalaryTool(BaseTool):
 
 ########################### Create Agent #####################################
 
-os.environ["OPENAI_API_KEY"] = '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'
+os.environ["OPENAI_API_KEY"] = 'YOUR API KEY'
 
 
 llm = ChatOpenAI(
