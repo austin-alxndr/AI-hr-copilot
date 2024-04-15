@@ -1,4 +1,4 @@
-# Tax Calculator Program
+# AI Application Prototype: Tax Calculator
 
 This Python program is designed to calculate taxes based on monthly salary, marriage status, and number of dependencies. Additionally, it includes a feature to calculate the required monthly salary to achieve a desired nett salary, considering the same factors.
 
