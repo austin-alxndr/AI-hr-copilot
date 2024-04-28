@@ -475,7 +475,7 @@ class TaxCalculatorTool(BaseTool):
     description = """
         Used to calculate taxes based on monthly salary, marriage status, and number of dependencies.
         Enter the monthly salary as a number, marriage status as a boolean (True for married, False for unmarried),
-        and the number of dependencies as an integer. The output will be the calculated tax information.
+        and the number of dependencies as an integer. The output will be the calculated nett salary and tax information, including the Tax Effectiveness Rate letter. This will be listed as bullet points for ease of reading purposes.
         """
     args_schema: Type[BaseModel] = TaxCalculatorInput
 
@@ -496,7 +496,7 @@ class NettToMonthlySalaryTool(BaseTool):
     description = """
         Used to calculate the monthly salary required to achieve a desired nett salary, based on marriage status and number of dependencies.
         Enter the desired nett salary as a number, marriage status as a boolean (True for married, False for unmarried),
-        and the number of dependencies as an integer. The output will be the calculated monthly salary and tax information.
+        and the number of dependencies as an integer. The output will be the calculated monthly salary and tax information, cinluding the 'TER' value. This will be listed as bullet points for ease of reading purposes.
         """
     args_schema: Type[BaseModel] = NettToMonthlySalaryInput
 
@@ -507,9 +507,26 @@ class NettToMonthlySalaryTool(BaseTool):
     def _arun(self, nett_salary: float, marriage_status: bool, dependencies: int):
         raise NotImplementedError("nett_to_monthly_calculator does not support asynchronous")
 
+##################### Streamlit Application Part 1 ##########################
+import streamlit as st
+
+# Sidebar for API Key Input
+with st.sidebar:
+    user_api_key = st.text_input("Enter your OpenAI API Key:", type="password")
+    st.markdown("[Get an OpenAI API key](https://platform.openai.com/account/api-keys)")
+    # st.markdown("[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)")
+    # st.markdown("[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)")
+
+# Set the API Key in the environment variable
+if user_api_key:
+    os.environ["OPENAI_API_KEY"] = user_api_key
+else:
+    st.warning("Please enter your OpenAI API key in the sidebar to use the application.")
+    st.stop()
+
 ########################### Create Agent #####################################
 
-os.environ["OPENAI_API_KEY"] = 'YOUR API KEY'
+# os.environ["OPENAI_API_KEY"] = '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'
 
 
 llm = ChatOpenAI(
@@ -523,6 +540,8 @@ tools = [
     # Add more tools as needed
 ]
 
+agent = OpenAIFunctionsAgent.from_llm_and_tools(llm, tools)
+agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, verbose=True)
 
 agent = OpenAIFunctionsAgent.from_llm_and_tools(llm, tools)
 agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, verbose=True)
@@ -532,6 +551,34 @@ agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, ve
 # result = agent_executor.run(query)
 # print(result)
 
-query2 = "Calculate the monthly salary required to achieve a nett salary of IDR 15 million, unmarried, and 0 dependencies"
-result2 = agent_executor.run(query2)
-print(result2)
+#query2 = "Calculate the monthly salary required to achieve a nett salary of IDR 20 million, married, and 1 dependencies"
+#result2 = agent_executor.run(query2)
+#print(result2)
+
+
+##################### Streamlit Application Part 2 ##########################
+st.title('AI-Powered HR Tax Calculator 🖩')
+
+# Display example prompt with a note to copy it
+example_prompt = "Calculate the monthly salary required to achieve a nett salary of IDR 20 million, married, and 1 dependencies."
+st.write("To get you started, please either copy/paste the below prompt or follow the format structure for best results.")
+st.text_area("Example Prompt:", example_prompt, height=50, key="example_prompt", help="Copy and paste this example into the input box above.")
+
+
+user_query = st.text_area("Enter your query to calculate your monthly or nett salary. Be sure to include your monthly/nett salary, marriage status, and dependencies.", height=150)
+
+if user_query:
+    # The function to invoke AI agent
+    def get_response(query):
+        return agent_executor.invoke(query)
+
+    # Displaying response from the agent
+    if st.button('Submit'):
+        response = get_response(user_query)
+        if response:
+            # Assuming response is a dictionary with 'input' and 'output' keys
+            # Modify here to display only the 'output' part
+            output_message = response.get('output', 'No output available.')  # Safely get the 'output' or return a default message
+            st.write(output_message)
+        else:
+            st.write("No response received.")
