@@ -510,23 +510,9 @@ class NettToMonthlySalaryTool(BaseTool):
 ##################### Streamlit Application Part 1 ##########################
 import streamlit as st
 
-# Sidebar for API Key Input
-with st.sidebar:
-    user_api_key = st.text_input("Enter your OpenAI API Key:", type="password")
-    st.markdown("[Get an OpenAI API key](https://platform.openai.com/account/api-keys)")
-    # st.markdown("[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)")
-    # st.markdown("[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)")
-
-# Set the API Key in the environment variable
-if user_api_key:
-    os.environ["OPENAI_API_KEY"] = user_api_key
-else:
-    st.warning("Please enter your OpenAI API key in the sidebar to use the application.")
-    st.stop()
-
 ########################### Create Agent #####################################
 
-# os.environ["OPENAI_API_KEY"] = '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'
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 
 llm = ChatOpenAI(
